@@ -1,0 +1,21 @@
+<section class="panel wide">
+  <div class="section-heading">
+    <p class="eyebrow">Audit trail</p>
+    <h2>Event log</h2>
+  </div>
+  <div class="event-log">
+    @for (event of state.events; track event.id) {
+      <article>
+        <time>{{ event.timestamp | date: 'short' }}</time>
+        <span class="badge" [ngClass]="state.statusClass(event.severity)">
+          {{ event.severity }}
+        </span>
+        <div>
+          <strong>{{ event.source }}</strong>
+          <p>{{ event.message }}</p>
+          <small>{{ event.diagnostic }} {{ event.remediation }}</small>
+        </div>
+      </article>
+    }
+  </div>
+</section>

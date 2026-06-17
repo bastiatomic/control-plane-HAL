@@ -1,0 +1,39 @@
+<section class="split-layout">
+  <div class="panel">
+    <div class="section-heading">
+      <p class="eyebrow">Role view</p>
+      <h2>{{ state.activeRole }}</h2>
+    </div>
+    <p class="role-copy">{{ state.roleDescriptions[state.activeRole] }}</p>
+    <div class="admin-list">
+      @for (item of state.roleActions; track item.title) {
+        <article>
+          <strong>{{ item.title }}</strong>
+          <span>{{ item.count }}</span>
+          <p>{{ item.cue }}</p>
+        </article>
+      }
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="section-heading">
+      <p class="eyebrow">Approvals</p>
+      <h2>Policy queue</h2>
+    </div>
+    <div class="request-list">
+      @for (request of state.approvalQueue; track request.id) {
+        <article>
+          <div class="row-title">
+            <strong>{{ request.id }} - {{ request.name }}</strong>
+            <span class="badge requires-approval">REQUIRES_APPROVAL</span>
+          </div>
+          <p>{{ request.serviceName }} in {{ request.environment }}</p>
+          <small>Declared model is retained with the request for review.</small>
+        </article>
+      } @empty {
+        <p class="empty">No requests are waiting for approval.</p>
+      }
+    </div>
+  </div>
+</section>

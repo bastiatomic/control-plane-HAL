@@ -1,0 +1,38 @@
+<section class="panel wide">
+  <div class="section-heading">
+    <p class="eyebrow">Foundations</p>
+    <h2>Landing zones, repos, and PRs</h2>
+  </div>
+  <div class="landing-grid">
+    @for (zone of state.landingZones; track zone.id) {
+      <article class="landing-card">
+        <div class="card-head">
+          <div>
+            <span>{{ zone.cloud }} - {{ zone.owner }}</span>
+            <h3>{{ zone.name }}</h3>
+          </div>
+          <span class="badge" [ngClass]="state.statusClass(zone.lifecycle)">
+            {{ zone.lifecycle }}
+          </span>
+        </div>
+        <p>{{ zone.diagnostic }}</p>
+        <div class="repo-list">
+          <strong>Repos</strong>
+          @for (repo of zone.repos; track repo) {
+            <span>{{ repo }}</span>
+          }
+        </div>
+        <div class="pr-list">
+          <strong>Pull requests</strong>
+          @for (pr of zone.pullRequests; track pr.id) {
+            <div>
+              <span>{{ pr.id }}</span>
+              <p>{{ pr.title }}</p>
+              <small>{{ pr.status }} - {{ pr.age }} - {{ pr.reviewer }}</small>
+            </div>
+          }
+        </div>
+      </article>
+    }
+  </div>
+</section>

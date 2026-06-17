@@ -1,0 +1,77 @@
+<section class="panel wide">
+  <div class="section-heading row">
+    <div>
+      <p class="eyebrow">Marketplace</p>
+      <h2>Service catalog</h2>
+    </div>
+    <label class="search">
+      <span>Search</span>
+      <input
+        type="search"
+        [(ngModel)]="state.searchTerm"
+        placeholder="Database, pipeline, vault..."
+      />
+    </label>
+  </div>
+
+  <div class="segments" aria-label="Catalog categories">
+    @for (category of state.categories; track category) {
+      <button
+        type="button"
+        [class.active]="state.selectedCategory === category"
+        (click)="state.selectedCategory = category"
+      >
+        {{ category }}
+      </button>
+    }
+  </div>
+
+  <div class="catalog-grid">
+    @for (service of state.filteredCatalog; track service.id) {
+      <article class="catalog-card">
+        <div class="card-head">
+          <div>
+            <span>{{ service.category }}</span>
+            <h3>{{ service.name }}</h3>
+          </div>
+          <span class="badge" [ngClass]="state.statusClass(service.status)">
+            {{ service.status }}
+          </span>
+        </div>
+        <p>{{ service.summary }}</p>
+        <dl>
+          <div>
+            <dt>Owner</dt>
+            <dd>{{ service.owner }}</dd>
+          </div>
+          <div>
+            <dt>Delivery</dt>
+            <dd>{{ service.deliveryTime }}</dd>
+          </div>
+          <div>
+            <dt>Risk</dt>
+            <dd>{{ service.risk }}</dd>
+          </div>
+        </dl>
+        <div class="tags">
+          @for (tag of service.tags; track tag) {
+            <span>{{ tag }}</span>
+          }
+        </div>
+        <ul>
+          @for (cue of service.cues; track cue) {
+            <li>{{ cue }}</li>
+          }
+        </ul>
+        <button
+          type="button"
+          class="primary"
+          [disabled]="!state.canWrite"
+          (click)="state.selectService(service)"
+        >
+          Request service
+        </button>
+      </article>
+    }
+  </div>
+</section>

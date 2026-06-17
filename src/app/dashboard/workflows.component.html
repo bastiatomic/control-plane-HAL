@@ -1,0 +1,33 @@
+<section class="panel wide">
+  <div class="section-heading">
+    <p class="eyebrow">Automation</p>
+    <h2>Long-running workflows</h2>
+  </div>
+  <div class="workflow-list">
+    @for (workflow of state.workflows; track workflow.id) {
+      <article class="workflow-row">
+        <div class="row-title">
+          <div>
+            <strong>{{ workflow.id }} - {{ workflow.title }}</strong>
+            <span>{{ workflow.owner }} - {{ workflow.target }}</span>
+          </div>
+          <span class="badge" [ngClass]="state.statusClass(workflow.status)">
+            {{ workflow.status }}
+          </span>
+        </div>
+        <div class="progress-line">
+          <div class="progress-track" aria-hidden="true">
+            <span [style.width.%]="workflow.progress"></span>
+          </div>
+          <span>{{ workflow.progress }}%</span>
+        </div>
+        <p>{{ workflow.currentStep }}</p>
+        @if (workflow.blockedBy) {
+          <small> Blocked by {{ workflow.blockedBy }}. {{ workflow.nextAction }} </small>
+        } @else {
+          <small>{{ workflow.nextAction }}</small>
+        }
+      </article>
+    }
+  </div>
+</section>

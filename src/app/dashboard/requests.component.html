@@ -1,0 +1,81 @@
+<section class="split-layout request-layout">
+  <div class="panel">
+    <div class="section-heading">
+      <p class="eyebrow">Declarative model</p>
+      <h2>New infrastructure request</h2>
+    </div>
+
+    @if (!state.canWrite) {
+      <div class="notice">
+        <strong>Read-only mode</strong>
+        <span>Switch to Team admin, Platform admin, or Approver to submit.</span>
+      </div>
+    }
+
+    <form [formGroup]="state.requestForm" (ngSubmit)="state.submitRequest()">
+      <label>
+        <span>Request name</span>
+        <input formControlName="name" placeholder="payments-prod-db" />
+      </label>
+
+      <div class="form-grid">
+        <label>
+          <span>Service</span>
+          <select formControlName="serviceId">
+            @for (service of state.catalog; track service.id) {
+              <option [ngValue]="service.id">{{ service.name }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          <span>Environment</span>
+          <select formControlName="environment">
+            @for (environment of state.environments; track environment) {
+              <option [ngValue]="environment">{{ environment }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <label>
+        <span>Model</span>
+        <textarea formControlName="model" rows="11"></textarea>
+      </label>
+
+      <button type="submit" class="primary" [disabled]="state.submitting || !state.canWrite">
+        {{ state.submitting ? 'Submitting...' : 'Submit request' }}
+      </button>
+    </form>
+
+    @if (state.requestFeedback) {
+      <div class="notice success">
+        <strong>Request update</strong>
+        <span>{{ state.requestFeedback }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="panel">
+    <div class="section-heading">
+      <p class="eyebrow">Queue</p>
+      <h2>Recent requests</h2>
+    </div>
+    <div class="request-list">
+      @for (request of state.requests; track request.id) {
+        <article>
+          <div class="row-title">
+            <strong>{{ request.id }} - {{ request.name }}</strong>
+            <span class="badge" [ngClass]="state.statusClass(request.status)">
+              {{ request.status }}
+            </span>
+          </div>
+          <p>{{ request.serviceName }} for {{ request.environment }}</p>
+          <small>
+            Requested by {{ request.requester }} -
+            {{ request.createdAt | date: 'short' }}
+          </small>
+        </article>
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,123 @@
+<section class="metrics" aria-label="Infrastructure status summary">
+  <article>
+    <span>Live services</span>
+    <strong>{{ state.liveResources }}</strong>
+    <small>Production and shared resources online</small>
+  </article>
+  <article>
+    <span>Pending requests</span>
+    <strong>{{ state.pendingRequests }}</strong>
+    <small>Automation or approval in progress</small>
+  </article>
+  <article>
+    <span>Open alerts</span>
+    <strong>{{ state.alertCount }}</strong>
+    <small>Diagnostics available for each alert</small>
+  </article>
+  <article>
+    <span>Detected drift</span>
+    <strong>{{ state.driftCount }}</strong>
+    <small>Generated PRs or model updates ready</small>
+  </article>
+</section>
+
+<section class="split-layout">
+  <div class="panel">
+    <div class="section-heading">
+      <p class="eyebrow">Operate</p>
+      <h2>Actionable cues</h2>
+    </div>
+    <div class="cue-list">
+      @for (resource of state.openAlerts; track resource.id) {
+        <article class="cue-item">
+          <div>
+            <span class="status-dot" [ngClass]="state.statusClass(resource.health)"></span>
+            <strong>{{ resource.name }}</strong>
+            <span>{{ resource.service }} - {{ resource.environment }}</span>
+          </div>
+          <p>{{ resource.diagnostic }}</p>
+          <small>{{ resource.remediation }}</small>
+        </article>
+      } @empty {
+        <article class="cue-item clean">
+          <div>
+            <span class="status-dot healthy"></span>
+            <strong>No active remediation</strong>
+          </div>
+          <p>All monitored resources are healthy.</p>
+          <small>No action required.</small>
+        </article>
+      }
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="section-heading">
+      <p class="eyebrow">Long running</p>
+      <h2>Workflow monitor</h2>
+    </div>
+    <div class="workflow-list compact">
+      @for (workflow of state.activeWorkflows; track workflow.id) {
+        <article class="workflow-row">
+          <div class="row-title">
+            <strong>{{ workflow.title }}</strong>
+            <span class="badge" [ngClass]="state.statusClass(workflow.status)">
+              {{ workflow.status }}
+            </span>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <span [style.width.%]="workflow.progress"></span>
+          </div>
+          <p>{{ workflow.currentStep }}</p>
+          <small>{{ workflow.nextAction }}</small>
+        </article>
+      } @empty {
+        <p class="empty">No long-running workflows need attention.</p>
+      }
+    </div>
+  </div>
+</section>
+
+<section class="panel wide">
+  <div class="section-heading">
+    <p class="eyebrow">Estate</p>
+    <h2>Services, health, CI/CD, drift, versions, alerts</h2>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Team</th>
+          <th>Status</th>
+          <th>Health</th>
+          <th>CI/CD</th>
+          <th>Drift</th>
+          <th>Version</th>
+          <th>Alerts</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (resource of state.resources; track resource.id) {
+          <tr>
+            <td>
+              <strong>{{ resource.name }}</strong>
+              <span>{{ resource.service }}</span>
+            </td>
+            <td>{{ resource.team }}</td>
+            <td>
+              <span class="badge" [ngClass]="state.statusClass(resource.lifecycle)">
+                {{ resource.lifecycle }}
+              </span>
+            </td>
+            <td>{{ resource.health }}</td>
+            <td>{{ resource.cicd }}</td>
+            <td>{{ resource.drift }}</td>
+            <td>{{ resource.version }}</td>
+            <td>{{ resource.alerts }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
