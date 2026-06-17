@@ -1,0 +1,18 @@
+Create a webapp with the following capabilities / features:
+- Framework: Angular
+- Core idea: A dashboard for teams to manage their infrastructure (basically Infra-as-service)
+- A login page. Registration is not possible. (This will be done manually by us)
+- After the login, user is forwarded to the dashboard
+- Dashboard must provide a marketplace/catalog to search through available services/products
+- Dashboard must support submitting new infrastructure requests via delcarative model
+- UI must display lifecycle status (LIVE, PENDING, etc)
+- UI must provide view for health, CI/CD state, drifts, versions and alerts
+- UI must have an event log
+- UI must display list of Landing Zones with repos and PRs
+- UI must provide views for platform admins, team admins, approvers, and read-only audits
+- UI must provide clear operability cues: clear status, errors, diagnostic and remediation tactics
+- Create mock endpoints for development/testing purposes.
+- User can monitor the status of long-running workflows (Sometimes workflows can take a while)
+- Use a minimalistic approach for the design
+- UI should be as simple as possible
+- Take into account cognitive load and useability (Users are non-technical manager and engineers). Users should feel confident navigating this webapp
