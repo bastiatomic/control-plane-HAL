@@ -1,14 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import {
-  FormBuilder,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { Subject, forkJoin, interval, takeUntil } from 'rxjs';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Observable, Subject, finalize, interval, takeUntil, timeout } from 'rxjs';
 
+import { apiUrl } from './api';
 import { AuthService } from './auth.service';
 import {
   AuthUser,
@@ -31,6 +27,16 @@ type DashboardView =
   | 'events'
   | 'admin';
 
+type DashboardDataKey =
+  | 'catalog'
+  | 'resources'
+  | 'requests'
+  | 'workflows'
+  | 'events'
+  | 'landingZones';
+
+const MOCK_API_LOAD_TIMEOUT_MS = 5_000;
+
 @Component({
   selector: 'app-dashboard',
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
@@ -42,6 +48,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
   private readonly destroy$ = new Subject<void>();
+  private pendingApiCalls = 0;
+  private readonly apiRequestVersions: Record<DashboardDataKey, number> = {
+    catalog: 0,
+    resources: 0,
+    requests: 0,
+    workflows: 0,
+    events: 0,
+    landingZones: 0,
+  };
 
   readonly views: { id: DashboardView; label: string }[] = [
     { id: 'overview', label: 'Overview' },
@@ -56,12 +71,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly roleDescriptions: Record<UserRole, string> = {
     'Platform admin':
       'Full platform operations view with guardrails, queues, and remediation ownership.',
-    'Team admin':
-      'Team-scoped operations view for service requests, drifts, and repo status.',
-    Approver:
-      'Approval queue focused on requests waiting for policy or risk decisions.',
-    'Read-only audit':
-      'Read-only evidence view for lifecycle, events, approvals, and changes.',
+    'Team admin': 'Team-scoped operations view for service requests, drifts, and repo status.',
+    Approver: 'Approval queue focused on requests waiting for policy or risk decisions.',
+    'Read-only audit': 'Read-only evidence view for lifecycle, events, approvals, and changes.',
   };
 
   readonly requestForm = this.fb.nonNullable.group({
@@ -114,53 +126,73 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadAll() {
-    this.loading = true;
     this.errorMessage = '';
 
-    forkJoin({
-      catalog: this.http.get<ServiceProduct[]>('/api/catalog'),
-      resources: this.http.get<ManagedResource[]>('/api/resources'),
-      requests: this.http.get<InfrastructureRequest[]>('/api/requests'),
-      workflows: this.http.get<Workflow[]>('/api/workflows'),
-      events: this.http.get<EventLog[]>('/api/events'),
-      landingZones: this.http.get<LandingZone[]>('/api/landing-zones'),
-    }).subscribe({
-      next: (data) => {
-        this.catalog = data.catalog;
-        this.resources = data.resources;
-        this.requests = data.requests;
-        this.workflows = data.workflows;
-        this.events = data.events;
-        this.landingZones = data.landingZones;
-        this.loading = false;
-      },
-      error: (error) => {
-        this.errorMessage =
-          error.error?.message || 'The mock API did not return dashboard data.';
-        this.loading = false;
-      },
+    this.loadApiData('catalog', this.http.get<ServiceProduct[]>(apiUrl('/catalog')), (catalog) => {
+      this.catalog = catalog;
     });
+    this.loadApiData(
+      'resources',
+      this.http.get<ManagedResource[]>(apiUrl('/resources')),
+      (resources) => {
+        this.resources = resources;
+      },
+    );
+    this.loadApiData(
+      'requests',
+      this.http.get<InfrastructureRequest[]>(apiUrl('/requests')),
+      (requests) => {
+        this.requests = requests;
+      },
+    );
+    this.loadApiData('workflows', this.http.get<Workflow[]>(apiUrl('/workflows')), (workflows) => {
+      this.workflows = workflows;
+    });
+    this.loadApiData('events', this.http.get<EventLog[]>(apiUrl('/events')), (events) => {
+      this.events = events;
+    });
+    this.loadApiData(
+      'landingZones',
+      this.http.get<LandingZone[]>(apiUrl('/landing-zones')),
+      (landingZones) => {
+        this.landingZones = landingZones;
+      },
+    );
   }
 
   loadWorkflows() {
-    this.http.get<Workflow[]>('/api/workflows').subscribe({
-      next: (workflows) => {
+    this.loadApiData(
+      'workflows',
+      this.http.get<Workflow[]>(apiUrl('/workflows')),
+      (workflows) => {
         this.workflows = workflows;
       },
-    });
+      false,
+    );
   }
 
   loadRequestsAndEvents() {
-    forkJoin({
-      resources: this.http.get<ManagedResource[]>('/api/resources'),
-      requests: this.http.get<InfrastructureRequest[]>('/api/requests'),
-      workflows: this.http.get<Workflow[]>('/api/workflows'),
-      events: this.http.get<EventLog[]>('/api/events'),
-    }).subscribe((data) => {
-      this.resources = data.resources;
-      this.requests = data.requests;
-      this.workflows = data.workflows;
-      this.events = data.events;
+    this.errorMessage = '';
+
+    this.loadApiData(
+      'resources',
+      this.http.get<ManagedResource[]>(apiUrl('/resources')),
+      (resources) => {
+        this.resources = resources;
+      },
+    );
+    this.loadApiData(
+      'requests',
+      this.http.get<InfrastructureRequest[]>(apiUrl('/requests')),
+      (requests) => {
+        this.requests = requests;
+      },
+    );
+    this.loadApiData('workflows', this.http.get<Workflow[]>(apiUrl('/workflows')), (workflows) => {
+      this.workflows = workflows;
+    });
+    this.loadApiData('events', this.http.get<EventLog[]>(apiUrl('/events')), (events) => {
+      this.events = events;
     });
   }
 
@@ -186,8 +218,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     if (this.requestForm.invalid) {
       this.requestForm.markAllAsTouched();
-      this.requestFeedback =
-        'Complete the request name, service, environment, and model.';
+      this.requestFeedback = 'Complete the request name, service, environment, and model.';
       return;
     }
 
@@ -195,10 +226,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.requestFeedback = '';
 
     this.http
-      .post<RequestSubmission>('/api/requests', this.requestForm.getRawValue())
+      .post<RequestSubmission>(apiUrl('/requests'), this.requestForm.getRawValue())
+      .pipe(
+        finalize(() => {
+          this.submitting = false;
+        }),
+      )
       .subscribe({
         next: ({ request, workflow }) => {
           this.requestFeedback = `${request.id} is ${request.status}. Workflow ${workflow.id} is ${workflow.status}.`;
+          this.requests = [request, ...this.requests.filter((item) => item.id !== request.id)];
+          this.workflows = [workflow, ...this.workflows.filter((item) => item.id !== workflow.id)];
           const serviceId = this.requestForm.controls.serviceId.value;
           this.requestForm.patchValue({
             name: '',
@@ -210,10 +248,59 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.requestFeedback =
             error.error?.message || 'Request submission failed in the mock API.';
         },
-        complete: () => {
-          this.submitting = false;
+      });
+  }
+
+  private loadApiData<T>(
+    key: DashboardDataKey,
+    request: Observable<T>,
+    update: (data: T) => void,
+    trackLoading = true,
+  ) {
+    const requestVersion = this.nextApiRequestVersion(key);
+
+    if (trackLoading) {
+      this.beginApiLoad();
+    }
+
+    request
+      .pipe(
+        timeout({ first: MOCK_API_LOAD_TIMEOUT_MS }),
+        takeUntil(this.destroy$),
+        finalize(() => {
+          if (trackLoading) {
+            this.finishApiLoad();
+          }
+        }),
+      )
+      .subscribe({
+        next: (data) => {
+          if (this.apiRequestVersions[key] === requestVersion) {
+            update(data);
+          }
+        },
+        error: (error) => {
+          if (this.apiRequestVersions[key] === requestVersion) {
+            this.errorMessage =
+              error.error?.message || 'The mock API did not return dashboard data.';
+          }
         },
       });
+  }
+
+  private nextApiRequestVersion(key: DashboardDataKey) {
+    this.apiRequestVersions[key] += 1;
+    return this.apiRequestVersions[key];
+  }
+
+  private beginApiLoad() {
+    this.pendingApiCalls += 1;
+    this.loading = true;
+  }
+
+  private finishApiLoad() {
+    this.pendingApiCalls = Math.max(0, this.pendingApiCalls - 1);
+    this.loading = this.pendingApiCalls > 0;
   }
 
   logout() {
@@ -233,17 +320,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     return this.catalog.filter((service) => {
       const matchesCategory =
-        this.selectedCategory === 'All' ||
-        service.category === this.selectedCategory;
+        this.selectedCategory === 'All' || service.category === this.selectedCategory;
       const matchesSearch =
         !term ||
-        [
-          service.name,
-          service.category,
-          service.summary,
-          service.owner,
-          ...service.tags,
-        ]
+        [service.name, service.category, service.summary, service.owner, ...service.tags]
           .join(' ')
           .toLowerCase()
           .includes(term);
@@ -345,10 +425,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       {
         title: 'Repo activity',
-        count: this.landingZones.reduce(
-          (total, zone) => total + zone.pullRequests.length,
-          0,
-        ),
+        count: this.landingZones.reduce((total, zone) => total + zone.pullRequests.length, 0),
         cue: 'Follow the PRs that change landing zone state.',
       },
     ];

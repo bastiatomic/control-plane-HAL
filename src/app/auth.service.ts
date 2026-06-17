@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, tap } from 'rxjs';
+import { BehaviorSubject, tap, timeout } from 'rxjs';
 
+import { apiUrl } from './api';
 import { AuthUser, UserRole } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -10,9 +11,7 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly storageKey = 'hal-control-plane-user';
-  private readonly userSubject = new BehaviorSubject<AuthUser | null>(
-    this.readStoredUser(),
-  );
+  private readonly userSubject = new BehaviorSubject<AuthUser | null>(this.readStoredUser());
 
   readonly user$ = this.userSubject.asObservable();
 
@@ -25,9 +24,10 @@ export class AuthService {
   }
 
   login(email: string, password: string) {
-    return this.http
-      .post<AuthUser>('/api/session', { email, password })
-      .pipe(tap((user) => this.setUser(user)));
+    return this.http.post<AuthUser>(apiUrl('/session'), { email, password }).pipe(
+      timeout({ first: 5_000 }),
+      tap((user) => this.setUser(user)),
+    );
   }
 
   logout() {

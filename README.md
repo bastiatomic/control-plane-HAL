@@ -14,7 +14,9 @@ accounts are mocked for development.
 
 ## Mock API
 
-The app uses an Angular `HttpInterceptorFn` to serve development endpoints:
+`npm start` runs a local mock API server on `http://127.0.0.1:4300`.
+The Angular app calls that server directly, so requests are normal
+browser-visible HTTP calls in DevTools Network:
 
 - `POST /api/session`
 - `GET /api/catalog`
@@ -25,8 +27,8 @@ The app uses an Angular `HttpInterceptorFn` to serve development endpoints:
 - `GET /api/events`
 - `GET /api/landing-zones`
 
-Workflow progress is recalculated on each `/api/workflows` request so long-running
-automation visibly moves while the app is open.
+Mock API responses resolve immediately. Submitting an infrastructure request creates
+a `LIVE` request, a completed workflow, and a healthy resource in the same response.
 
 ## Build
 

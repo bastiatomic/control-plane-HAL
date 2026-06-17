@@ -7,11 +7,7 @@
 
     <nav class="primary-nav" aria-label="Dashboard views">
       @for (view of views; track view.id) {
-        <button
-          type="button"
-          [class.active]="activeView === view.id"
-          (click)="setView(view.id)"
-        >
+        <button type="button" [class.active]="activeView === view.id" (click)="setView(view.id)">
           {{ view.label }}
         </button>
       }
@@ -19,11 +15,7 @@
 
     <div class="role-block">
       <label for="role-select">Role view</label>
-      <select
-        id="role-select"
-        [ngModel]="activeRole"
-        (ngModelChange)="setRole($event)"
-      >
+      <select id="role-select" [ngModel]="activeRole" (ngModelChange)="setRole($event)">
         @for (role of user?.roles || []; track role) {
           <option [ngValue]="role">{{ role }}</option>
         }
@@ -54,444 +46,439 @@
 
     @if (loading) {
       <div class="loading">Loading dashboard data...</div>
-    } @else {
-      @if (activeView === 'overview') {
-        <section class="metrics" aria-label="Infrastructure status summary">
-          <article>
-            <span>Live services</span>
-            <strong>{{ liveResources }}</strong>
-            <small>Production and shared resources online</small>
-          </article>
-          <article>
-            <span>Pending requests</span>
-            <strong>{{ pendingRequests }}</strong>
-            <small>Automation or approval in progress</small>
-          </article>
-          <article>
-            <span>Open alerts</span>
-            <strong>{{ alertCount }}</strong>
-            <small>Diagnostics available for each alert</small>
-          </article>
-          <article>
-            <span>Detected drift</span>
-            <strong>{{ driftCount }}</strong>
-            <small>Generated PRs or model updates ready</small>
-          </article>
-        </section>
+    }
 
-        <section class="split-layout">
-          <div class="panel">
-            <div class="section-heading">
-              <p class="eyebrow">Operate</p>
-              <h2>Actionable cues</h2>
-            </div>
-            <div class="cue-list">
-              @for (resource of openAlerts; track resource.id) {
-                <article class="cue-item">
-                  <div>
-                    <span
-                      class="status-dot"
-                      [ngClass]="statusClass(resource.health)"
-                    ></span>
-                    <strong>{{ resource.name }}</strong>
-                    <span>{{ resource.service }} - {{ resource.environment }}</span>
-                  </div>
-                  <p>{{ resource.diagnostic }}</p>
-                  <small>{{ resource.remediation }}</small>
-                </article>
-              } @empty {
-                <article class="cue-item clean">
-                  <div>
-                    <span class="status-dot healthy"></span>
-                    <strong>No active remediation</strong>
-                  </div>
-                  <p>All monitored resources are healthy.</p>
-                  <small>No action required.</small>
-                </article>
-              }
-            </div>
-          </div>
+    @if (activeView === 'overview') {
+      <section class="metrics" aria-label="Infrastructure status summary">
+        <article>
+          <span>Live services</span>
+          <strong>{{ liveResources }}</strong>
+          <small>Production and shared resources online</small>
+        </article>
+        <article>
+          <span>Pending requests</span>
+          <strong>{{ pendingRequests }}</strong>
+          <small>Automation or approval in progress</small>
+        </article>
+        <article>
+          <span>Open alerts</span>
+          <strong>{{ alertCount }}</strong>
+          <small>Diagnostics available for each alert</small>
+        </article>
+        <article>
+          <span>Detected drift</span>
+          <strong>{{ driftCount }}</strong>
+          <small>Generated PRs or model updates ready</small>
+        </article>
+      </section>
 
-          <div class="panel">
-            <div class="section-heading">
-              <p class="eyebrow">Long running</p>
-              <h2>Workflow monitor</h2>
-            </div>
-            <div class="workflow-list compact">
-              @for (workflow of activeWorkflows; track workflow.id) {
-                <article class="workflow-row">
-                  <div class="row-title">
-                    <strong>{{ workflow.title }}</strong>
-                    <span class="badge" [ngClass]="statusClass(workflow.status)">
-                      {{ workflow.status }}
-                    </span>
-                  </div>
-                  <div class="progress-track" aria-hidden="true">
-                    <span [style.width.%]="workflow.progress"></span>
-                  </div>
-                  <p>{{ workflow.currentStep }}</p>
-                  <small>{{ workflow.nextAction }}</small>
-                </article>
-              } @empty {
-                <p class="empty">No long-running workflows need attention.</p>
-              }
-            </div>
-          </div>
-        </section>
-
-        <section class="panel wide">
+      <section class="split-layout">
+        <div class="panel">
           <div class="section-heading">
-            <p class="eyebrow">Estate</p>
-            <h2>Services, health, CI/CD, drift, versions, alerts</h2>
+            <p class="eyebrow">Operate</p>
+            <h2>Actionable cues</h2>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Team</th>
-                  <th>Status</th>
-                  <th>Health</th>
-                  <th>CI/CD</th>
-                  <th>Drift</th>
-                  <th>Version</th>
-                  <th>Alerts</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (resource of resources; track resource.id) {
-                  <tr>
-                    <td>
-                      <strong>{{ resource.name }}</strong>
-                      <span>{{ resource.service }}</span>
-                    </td>
-                    <td>{{ resource.team }}</td>
-                    <td>
-                      <span class="badge" [ngClass]="statusClass(resource.lifecycle)">
-                        {{ resource.lifecycle }}
-                      </span>
-                    </td>
-                    <td>{{ resource.health }}</td>
-                    <td>{{ resource.cicd }}</td>
-                    <td>{{ resource.drift }}</td>
-                    <td>{{ resource.version }}</td>
-                    <td>{{ resource.alerts }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </section>
-      }
-
-      @if (activeView === 'catalog') {
-        <section class="panel wide">
-          <div class="section-heading row">
-            <div>
-              <p class="eyebrow">Marketplace</p>
-              <h2>Service catalog</h2>
-            </div>
-            <label class="search">
-              <span>Search</span>
-              <input
-                type="search"
-                [(ngModel)]="searchTerm"
-                placeholder="Database, pipeline, vault..."
-              />
-            </label>
-          </div>
-
-          <div class="segments" aria-label="Catalog categories">
-            @for (category of categories; track category) {
-              <button
-                type="button"
-                [class.active]="selectedCategory === category"
-                (click)="selectedCategory = category"
-              >
-                {{ category }}
-              </button>
-            }
-          </div>
-
-          <div class="catalog-grid">
-            @for (service of filteredCatalog; track service.id) {
-              <article class="catalog-card">
-                <div class="card-head">
-                  <div>
-                    <span>{{ service.category }}</span>
-                    <h3>{{ service.name }}</h3>
-                  </div>
-                  <span class="badge" [ngClass]="statusClass(service.status)">
-                    {{ service.status }}
-                  </span>
+          <div class="cue-list">
+            @for (resource of openAlerts; track resource.id) {
+              <article class="cue-item">
+                <div>
+                  <span class="status-dot" [ngClass]="statusClass(resource.health)"></span>
+                  <strong>{{ resource.name }}</strong>
+                  <span>{{ resource.service }} - {{ resource.environment }}</span>
                 </div>
-                <p>{{ service.summary }}</p>
-                <dl>
-                  <div>
-                    <dt>Owner</dt>
-                    <dd>{{ service.owner }}</dd>
-                  </div>
-                  <div>
-                    <dt>Delivery</dt>
-                    <dd>{{ service.deliveryTime }}</dd>
-                  </div>
-                  <div>
-                    <dt>Risk</dt>
-                    <dd>{{ service.risk }}</dd>
-                  </div>
-                </dl>
-                <div class="tags">
-                  @for (tag of service.tags; track tag) {
-                    <span>{{ tag }}</span>
-                  }
+                <p>{{ resource.diagnostic }}</p>
+                <small>{{ resource.remediation }}</small>
+              </article>
+            } @empty {
+              <article class="cue-item clean">
+                <div>
+                  <span class="status-dot healthy"></span>
+                  <strong>No active remediation</strong>
                 </div>
-                <ul>
-                  @for (cue of service.cues; track cue) {
-                    <li>{{ cue }}</li>
-                  }
-                </ul>
-                <button
-                  type="button"
-                  class="primary"
-                  [disabled]="!canWrite"
-                  (click)="selectService(service)"
-                >
-                  Request service
-                </button>
+                <p>All monitored resources are healthy.</p>
+                <small>No action required.</small>
               </article>
             }
           </div>
-        </section>
-      }
+        </div>
 
-      @if (activeView === 'requests') {
-        <section class="split-layout request-layout">
-          <div class="panel">
-            <div class="section-heading">
-              <p class="eyebrow">Declarative model</p>
-              <h2>New infrastructure request</h2>
-            </div>
-
-            @if (!canWrite) {
-              <div class="notice">
-                <strong>Read-only mode</strong>
-                <span>Switch to Team admin, Platform admin, or Approver to submit.</span>
-              </div>
-            }
-
-            <form [formGroup]="requestForm" (ngSubmit)="submitRequest()">
-              <label>
-                <span>Request name</span>
-                <input formControlName="name" placeholder="payments-prod-db" />
-              </label>
-
-              <div class="form-grid">
-                <label>
-                  <span>Service</span>
-                  <select formControlName="serviceId">
-                    @for (service of catalog; track service.id) {
-                      <option [ngValue]="service.id">{{ service.name }}</option>
-                    }
-                  </select>
-                </label>
-                <label>
-                  <span>Environment</span>
-                  <select formControlName="environment">
-                    @for (environment of environments; track environment) {
-                      <option [ngValue]="environment">{{ environment }}</option>
-                    }
-                  </select>
-                </label>
-              </div>
-
-              <label>
-                <span>Model</span>
-                <textarea formControlName="model" rows="11"></textarea>
-              </label>
-
-              <button type="submit" class="primary" [disabled]="submitting || !canWrite">
-                {{ submitting ? 'Submitting...' : 'Submit request' }}
-              </button>
-            </form>
-
-            @if (requestFeedback) {
-              <div class="notice success">
-                <strong>Request update</strong>
-                <span>{{ requestFeedback }}</span>
-              </div>
-            }
-          </div>
-
-          <div class="panel">
-            <div class="section-heading">
-              <p class="eyebrow">Queue</p>
-              <h2>Recent requests</h2>
-            </div>
-            <div class="request-list">
-              @for (request of requests; track request.id) {
-                <article>
-                  <div class="row-title">
-                    <strong>{{ request.id }} - {{ request.name }}</strong>
-                    <span class="badge" [ngClass]="statusClass(request.status)">
-                      {{ request.status }}
-                    </span>
-                  </div>
-                  <p>{{ request.serviceName }} for {{ request.environment }}</p>
-                  <small>
-                    Requested by {{ request.requester }} -
-                    {{ request.createdAt | date: 'short' }}
-                  </small>
-                </article>
-              }
-            </div>
-          </div>
-        </section>
-      }
-
-      @if (activeView === 'workflows') {
-        <section class="panel wide">
+        <div class="panel">
           <div class="section-heading">
-            <p class="eyebrow">Automation</p>
-            <h2>Long-running workflows</h2>
+            <p class="eyebrow">Long running</p>
+            <h2>Workflow monitor</h2>
           </div>
-          <div class="workflow-list">
-            @for (workflow of workflows; track workflow.id) {
+          <div class="workflow-list compact">
+            @for (workflow of activeWorkflows; track workflow.id) {
               <article class="workflow-row">
                 <div class="row-title">
-                  <div>
-                    <strong>{{ workflow.id }} - {{ workflow.title }}</strong>
-                    <span>{{ workflow.owner }} - {{ workflow.target }}</span>
-                  </div>
+                  <strong>{{ workflow.title }}</strong>
                   <span class="badge" [ngClass]="statusClass(workflow.status)">
                     {{ workflow.status }}
                   </span>
                 </div>
-                <div class="progress-line">
-                  <div class="progress-track" aria-hidden="true">
-                    <span [style.width.%]="workflow.progress"></span>
-                  </div>
-                  <span>{{ workflow.progress }}%</span>
+                <div class="progress-track" aria-hidden="true">
+                  <span [style.width.%]="workflow.progress"></span>
                 </div>
                 <p>{{ workflow.currentStep }}</p>
-                @if (workflow.blockedBy) {
-                  <small>
-                    Blocked by {{ workflow.blockedBy }}. {{ workflow.nextAction }}
-                  </small>
-                } @else {
-                  <small>{{ workflow.nextAction }}</small>
-                }
+                <small>{{ workflow.nextAction }}</small>
               </article>
+            } @empty {
+              <p class="empty">No long-running workflows need attention.</p>
             }
           </div>
-        </section>
-      }
+        </div>
+      </section>
 
-      @if (activeView === 'landing-zones') {
-        <section class="panel wide">
-          <div class="section-heading">
-            <p class="eyebrow">Foundations</p>
-            <h2>Landing zones, repos, and PRs</h2>
+      <section class="panel wide">
+        <div class="section-heading">
+          <p class="eyebrow">Estate</p>
+          <h2>Services, health, CI/CD, drift, versions, alerts</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Team</th>
+                <th>Status</th>
+                <th>Health</th>
+                <th>CI/CD</th>
+                <th>Drift</th>
+                <th>Version</th>
+                <th>Alerts</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (resource of resources; track resource.id) {
+                <tr>
+                  <td>
+                    <strong>{{ resource.name }}</strong>
+                    <span>{{ resource.service }}</span>
+                  </td>
+                  <td>{{ resource.team }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="statusClass(resource.lifecycle)">
+                      {{ resource.lifecycle }}
+                    </span>
+                  </td>
+                  <td>{{ resource.health }}</td>
+                  <td>{{ resource.cicd }}</td>
+                  <td>{{ resource.drift }}</td>
+                  <td>{{ resource.version }}</td>
+                  <td>{{ resource.alerts }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    @if (activeView === 'catalog') {
+      <section class="panel wide">
+        <div class="section-heading row">
+          <div>
+            <p class="eyebrow">Marketplace</p>
+            <h2>Service catalog</h2>
           </div>
-          <div class="landing-grid">
-            @for (zone of landingZones; track zone.id) {
-              <article class="landing-card">
-                <div class="card-head">
-                  <div>
-                    <span>{{ zone.cloud }} - {{ zone.owner }}</span>
-                    <h3>{{ zone.name }}</h3>
-                  </div>
-                  <span class="badge" [ngClass]="statusClass(zone.lifecycle)">
-                    {{ zone.lifecycle }}
+          <label class="search">
+            <span>Search</span>
+            <input
+              type="search"
+              [(ngModel)]="searchTerm"
+              placeholder="Database, pipeline, vault..."
+            />
+          </label>
+        </div>
+
+        <div class="segments" aria-label="Catalog categories">
+          @for (category of categories; track category) {
+            <button
+              type="button"
+              [class.active]="selectedCategory === category"
+              (click)="selectedCategory = category"
+            >
+              {{ category }}
+            </button>
+          }
+        </div>
+
+        <div class="catalog-grid">
+          @for (service of filteredCatalog; track service.id) {
+            <article class="catalog-card">
+              <div class="card-head">
+                <div>
+                  <span>{{ service.category }}</span>
+                  <h3>{{ service.name }}</h3>
+                </div>
+                <span class="badge" [ngClass]="statusClass(service.status)">
+                  {{ service.status }}
+                </span>
+              </div>
+              <p>{{ service.summary }}</p>
+              <dl>
+                <div>
+                  <dt>Owner</dt>
+                  <dd>{{ service.owner }}</dd>
+                </div>
+                <div>
+                  <dt>Delivery</dt>
+                  <dd>{{ service.deliveryTime }}</dd>
+                </div>
+                <div>
+                  <dt>Risk</dt>
+                  <dd>{{ service.risk }}</dd>
+                </div>
+              </dl>
+              <div class="tags">
+                @for (tag of service.tags; track tag) {
+                  <span>{{ tag }}</span>
+                }
+              </div>
+              <ul>
+                @for (cue of service.cues; track cue) {
+                  <li>{{ cue }}</li>
+                }
+              </ul>
+              <button
+                type="button"
+                class="primary"
+                [disabled]="!canWrite"
+                (click)="selectService(service)"
+              >
+                Request service
+              </button>
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    @if (activeView === 'requests') {
+      <section class="split-layout request-layout">
+        <div class="panel">
+          <div class="section-heading">
+            <p class="eyebrow">Declarative model</p>
+            <h2>New infrastructure request</h2>
+          </div>
+
+          @if (!canWrite) {
+            <div class="notice">
+              <strong>Read-only mode</strong>
+              <span>Switch to Team admin, Platform admin, or Approver to submit.</span>
+            </div>
+          }
+
+          <form [formGroup]="requestForm" (ngSubmit)="submitRequest()">
+            <label>
+              <span>Request name</span>
+              <input formControlName="name" placeholder="payments-prod-db" />
+            </label>
+
+            <div class="form-grid">
+              <label>
+                <span>Service</span>
+                <select formControlName="serviceId">
+                  @for (service of catalog; track service.id) {
+                    <option [ngValue]="service.id">{{ service.name }}</option>
+                  }
+                </select>
+              </label>
+              <label>
+                <span>Environment</span>
+                <select formControlName="environment">
+                  @for (environment of environments; track environment) {
+                    <option [ngValue]="environment">{{ environment }}</option>
+                  }
+                </select>
+              </label>
+            </div>
+
+            <label>
+              <span>Model</span>
+              <textarea formControlName="model" rows="11"></textarea>
+            </label>
+
+            <button type="submit" class="primary" [disabled]="submitting || !canWrite">
+              {{ submitting ? 'Submitting...' : 'Submit request' }}
+            </button>
+          </form>
+
+          @if (requestFeedback) {
+            <div class="notice success">
+              <strong>Request update</strong>
+              <span>{{ requestFeedback }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="panel">
+          <div class="section-heading">
+            <p class="eyebrow">Queue</p>
+            <h2>Recent requests</h2>
+          </div>
+          <div class="request-list">
+            @for (request of requests; track request.id) {
+              <article>
+                <div class="row-title">
+                  <strong>{{ request.id }} - {{ request.name }}</strong>
+                  <span class="badge" [ngClass]="statusClass(request.status)">
+                    {{ request.status }}
                   </span>
                 </div>
-                <p>{{ zone.diagnostic }}</p>
-                <div class="repo-list">
-                  <strong>Repos</strong>
-                  @for (repo of zone.repos; track repo) {
-                    <span>{{ repo }}</span>
-                  }
-                </div>
-                <div class="pr-list">
-                  <strong>Pull requests</strong>
-                  @for (pr of zone.pullRequests; track pr.id) {
-                    <div>
-                      <span>{{ pr.id }}</span>
-                      <p>{{ pr.title }}</p>
-                      <small>{{ pr.status }} - {{ pr.age }} - {{ pr.reviewer }}</small>
-                    </div>
-                  }
-                </div>
+                <p>{{ request.serviceName }} for {{ request.environment }}</p>
+                <small>
+                  Requested by {{ request.requester }} -
+                  {{ request.createdAt | date: 'short' }}
+                </small>
               </article>
             }
           </div>
-        </section>
-      }
+        </div>
+      </section>
+    }
 
-      @if (activeView === 'events') {
-        <section class="panel wide">
-          <div class="section-heading">
-            <p class="eyebrow">Audit trail</p>
-            <h2>Event log</h2>
-          </div>
-          <div class="event-log">
-            @for (event of events; track event.id) {
-              <article>
-                <time>{{ event.timestamp | date: 'short' }}</time>
-                <span class="badge" [ngClass]="statusClass(event.severity)">
-                  {{ event.severity }}
-                </span>
+    @if (activeView === 'workflows') {
+      <section class="panel wide">
+        <div class="section-heading">
+          <p class="eyebrow">Automation</p>
+          <h2>Long-running workflows</h2>
+        </div>
+        <div class="workflow-list">
+          @for (workflow of workflows; track workflow.id) {
+            <article class="workflow-row">
+              <div class="row-title">
                 <div>
-                  <strong>{{ event.source }}</strong>
-                  <p>{{ event.message }}</p>
-                  <small>{{ event.diagnostic }} {{ event.remediation }}</small>
+                  <strong>{{ workflow.id }} - {{ workflow.title }}</strong>
+                  <span>{{ workflow.owner }} - {{ workflow.target }}</span>
                 </div>
+                <span class="badge" [ngClass]="statusClass(workflow.status)">
+                  {{ workflow.status }}
+                </span>
+              </div>
+              <div class="progress-line">
+                <div class="progress-track" aria-hidden="true">
+                  <span [style.width.%]="workflow.progress"></span>
+                </div>
+                <span>{{ workflow.progress }}%</span>
+              </div>
+              <p>{{ workflow.currentStep }}</p>
+              @if (workflow.blockedBy) {
+                <small> Blocked by {{ workflow.blockedBy }}. {{ workflow.nextAction }} </small>
+              } @else {
+                <small>{{ workflow.nextAction }}</small>
+              }
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    @if (activeView === 'landing-zones') {
+      <section class="panel wide">
+        <div class="section-heading">
+          <p class="eyebrow">Foundations</p>
+          <h2>Landing zones, repos, and PRs</h2>
+        </div>
+        <div class="landing-grid">
+          @for (zone of landingZones; track zone.id) {
+            <article class="landing-card">
+              <div class="card-head">
+                <div>
+                  <span>{{ zone.cloud }} - {{ zone.owner }}</span>
+                  <h3>{{ zone.name }}</h3>
+                </div>
+                <span class="badge" [ngClass]="statusClass(zone.lifecycle)">
+                  {{ zone.lifecycle }}
+                </span>
+              </div>
+              <p>{{ zone.diagnostic }}</p>
+              <div class="repo-list">
+                <strong>Repos</strong>
+                @for (repo of zone.repos; track repo) {
+                  <span>{{ repo }}</span>
+                }
+              </div>
+              <div class="pr-list">
+                <strong>Pull requests</strong>
+                @for (pr of zone.pullRequests; track pr.id) {
+                  <div>
+                    <span>{{ pr.id }}</span>
+                    <p>{{ pr.title }}</p>
+                    <small>{{ pr.status }} - {{ pr.age }} - {{ pr.reviewer }}</small>
+                  </div>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    @if (activeView === 'events') {
+      <section class="panel wide">
+        <div class="section-heading">
+          <p class="eyebrow">Audit trail</p>
+          <h2>Event log</h2>
+        </div>
+        <div class="event-log">
+          @for (event of events; track event.id) {
+            <article>
+              <time>{{ event.timestamp | date: 'short' }}</time>
+              <span class="badge" [ngClass]="statusClass(event.severity)">
+                {{ event.severity }}
+              </span>
+              <div>
+                <strong>{{ event.source }}</strong>
+                <p>{{ event.message }}</p>
+                <small>{{ event.diagnostic }} {{ event.remediation }}</small>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    @if (activeView === 'admin') {
+      <section class="split-layout">
+        <div class="panel">
+          <div class="section-heading">
+            <p class="eyebrow">Role view</p>
+            <h2>{{ activeRole }}</h2>
+          </div>
+          <p class="role-copy">{{ roleDescriptions[activeRole] }}</p>
+          <div class="admin-list">
+            @for (item of roleActions; track item.title) {
+              <article>
+                <strong>{{ item.title }}</strong>
+                <span>{{ item.count }}</span>
+                <p>{{ item.cue }}</p>
               </article>
             }
           </div>
-        </section>
-      }
+        </div>
 
-      @if (activeView === 'admin') {
-        <section class="split-layout">
-          <div class="panel">
-            <div class="section-heading">
-              <p class="eyebrow">Role view</p>
-              <h2>{{ activeRole }}</h2>
-            </div>
-            <p class="role-copy">{{ roleDescriptions[activeRole] }}</p>
-            <div class="admin-list">
-              @for (item of roleActions; track item.title) {
-                <article>
-                  <strong>{{ item.title }}</strong>
-                  <span>{{ item.count }}</span>
-                  <p>{{ item.cue }}</p>
-                </article>
-              }
-            </div>
+        <div class="panel">
+          <div class="section-heading">
+            <p class="eyebrow">Approvals</p>
+            <h2>Policy queue</h2>
           </div>
-
-          <div class="panel">
-            <div class="section-heading">
-              <p class="eyebrow">Approvals</p>
-              <h2>Policy queue</h2>
-            </div>
-            <div class="request-list">
-              @for (request of approvalQueue; track request.id) {
-                <article>
-                  <div class="row-title">
-                    <strong>{{ request.id }} - {{ request.name }}</strong>
-                    <span class="badge requires-approval">REQUIRES_APPROVAL</span>
-                  </div>
-                  <p>{{ request.serviceName }} in {{ request.environment }}</p>
-                  <small>Declared model is retained with the request for review.</small>
-                </article>
-              } @empty {
-                <p class="empty">No requests are waiting for approval.</p>
-              }
-            </div>
+          <div class="request-list">
+            @for (request of approvalQueue; track request.id) {
+              <article>
+                <div class="row-title">
+                  <strong>{{ request.id }} - {{ request.name }}</strong>
+                  <span class="badge requires-approval">REQUIRES_APPROVAL</span>
+                </div>
+                <p>{{ request.serviceName }} in {{ request.environment }}</p>
+                <small>Declared model is retained with the request for review.</small>
+              </article>
+            } @empty {
+              <p class="empty">No requests are waiting for approval.</p>
+            }
           </div>
-        </section>
-      }
+        </div>
+      </section>
     }
   </main>
 </div>
