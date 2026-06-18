@@ -10,10 +10,20 @@ app-dashboard {
     min-height: 100vh;
   }
 
+  app-dashboard-menu {
+    display: flex;
+    min-width: 0;
+  }
+
+  app-dashboard-heading {
+    display: block;
+  }
+
   .sidebar {
     background: #ffffff;
     border-right: 1px solid #dde3ea;
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 24px;
     min-width: 0;

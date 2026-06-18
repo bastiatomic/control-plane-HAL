@@ -1,6 +1,6 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { App } from './app/app';
+import { AppComponent } from './app/app/app.component';
 
 const STALE_MOCK_API_RELOAD_KEY = 'hal-stale-mock-api-worker-reload';
 
@@ -9,7 +9,7 @@ removeStaleMockApiServiceWorker()
     console.warn('Stale mock API service worker cleanup failed.', error);
   })
   .finally(() => {
-    bootstrapApplication(App, appConfig).catch((err) => console.error(err));
+    bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
   });
 
 async function removeStaleMockApiServiceWorker() {

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 
-import { DashboardStateService } from '../dashboard-state.service';
+import { DashboardStateService } from '../../services/dashboard-state/dashboard-state.service';
 
 @Component({
   selector: 'app-dashboard-requests',

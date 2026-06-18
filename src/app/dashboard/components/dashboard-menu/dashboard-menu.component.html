@@ -1,0 +1,24 @@
+<aside class="sidebar">
+  <div class="brand">
+    <strong>HAL</strong>
+    <span>Control Plane</span>
+  </div>
+
+  <nav class="primary-nav" aria-label="Dashboard views">
+    @for (view of state.views; track view.id) {
+      <a [routerLink]="['/dashboard', view.id]" routerLinkActive="active">
+        {{ view.label }}
+      </a>
+    }
+  </nav>
+
+  <div class="role-block">
+    <label for="role-select">Role view</label>
+    <select id="role-select" [ngModel]="state.activeRole" (ngModelChange)="state.setRole($event)">
+      @for (role of state.user?.roles || []; track role) {
+        <option [ngValue]="role">{{ role }}</option>
+      }
+    </select>
+    <p>{{ state.roleDescriptions[state.activeRole] }}</p>
+  </div>
+</aside>

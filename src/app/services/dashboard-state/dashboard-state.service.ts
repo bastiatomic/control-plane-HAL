@@ -4,8 +4,8 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Observable, Subject, finalize, interval, takeUntil, timeout } from 'rxjs';
 
-import { apiUrl } from './api';
-import { AuthService } from './auth.service';
+import { apiUrl } from '../../api';
+import { AuthService } from '../auth/auth.service';
 import {
   AuthUser,
   EventLog,
@@ -16,7 +16,7 @@ import {
   ServiceProduct,
   UserRole,
   Workflow,
-} from './models';
+} from '../../models';
 
 export type DashboardView =
   | 'overview'

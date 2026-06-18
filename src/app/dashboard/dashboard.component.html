@@ -1,0 +1,20 @@
+<div class="app-shell">
+  <app-dashboard-menu></app-dashboard-menu>
+
+  <main class="workspace">
+    <app-dashboard-heading></app-dashboard-heading>
+
+    @if (state.errorMessage) {
+      <div class="notice error" role="alert">
+        <strong>Dashboard data unavailable</strong>
+        <span>{{ state.errorMessage }}</span>
+      </div>
+    }
+
+    @if (state.loading) {
+      <div class="loading">Loading dashboard data...</div>
+    }
+
+    <router-outlet />
+  </main>
+</div>

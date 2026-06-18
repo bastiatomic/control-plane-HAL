@@ -1,16 +1,16 @@
 import { Routes } from '@angular/router';
 
 import { authGuard, guestGuard } from './auth.guard';
-import { DashboardComponent } from './dashboard.component';
-import { DashboardStateService } from './dashboard-state.service';
-import { DashboardAdminComponent } from './dashboard/admin.component';
-import { DashboardCatalogComponent } from './dashboard/catalog.component';
-import { DashboardEventsComponent } from './dashboard/events.component';
-import { DashboardLandingZonesComponent } from './dashboard/landing-zones.component';
-import { DashboardOverviewComponent } from './dashboard/overview.component';
-import { DashboardRequestsComponent } from './dashboard/requests.component';
-import { DashboardWorkflowsComponent } from './dashboard/workflows.component';
-import { LoginComponent } from './login.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
+import { DashboardAdminComponent } from './dashboard/admin/admin.component';
+import { DashboardCatalogComponent } from './dashboard/catalog/catalog.component';
+import { DashboardEventsComponent } from './dashboard/events/events.component';
+import { DashboardLandingZonesComponent } from './dashboard/landing-zones/landing-zones.component';
+import { DashboardOverviewComponent } from './dashboard/overview/overview.component';
+import { DashboardRequestsComponent } from './dashboard/requests/requests.component';
+import { DashboardWorkflowsComponent } from './dashboard/workflows/workflows.component';
+import { LoginComponent } from './login/login.component';
+import { DashboardStateService } from './services/dashboard-state/dashboard-state.service';
 
 export const routes: Routes = [
   {

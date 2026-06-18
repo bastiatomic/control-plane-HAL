@@ -3,8 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, tap, timeout } from 'rxjs';
 
-import { apiUrl } from './api';
-import { AuthUser, UserRole } from './models';
+import { apiUrl } from '../../api';
+import { AuthUser, UserRole } from '../../models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
